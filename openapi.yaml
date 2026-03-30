@@ -1,0 +1,385 @@
+openapi: 3.0.3
+info:
+  title: Mosquito API
+  version: 1.0.0
+  description: API for managing parcours, points, and interventions
+
+servers:
+  - url: http://localhost:8000/api
+
+paths:
+
+  /login/:
+    post:
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        "200":
+          description: Authenticated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Invalid credentials
+
+  /parcours/:
+    get:
+      summary: List parcours
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Parcours"
+    post:
+      summary: Create parcours
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Parcours"
+      responses:
+        "201":
+          description: Created
+
+  /parcours/{id}/:
+    get:
+      summary: Retrieve parcours
+      parameters:
+        - $ref: "#/components/parameters/UUID"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Parcours"
+    put:
+      summary: Update parcours
+      parameters:
+        - $ref: "#/components/parameters/UUID"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Parcours"
+      responses:
+        "200":
+          description: Updated
+    delete:
+      summary: Delete parcours
+      parameters:
+        - $ref: "#/components/parameters/UUID"
+      responses:
+        "204":
+          description: Deleted
+
+  /points/:
+    get:
+      summary: List points
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Point"
+    post:
+      summary: Create point
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PointCreate"
+      responses:
+        "201":
+          description: Created
+
+  /points/{id}/:
+    get:
+      summary: Retrieve point
+      parameters:
+        - $ref: "#/components/parameters/UUID"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Point"
+    put:
+      summary: Update point
+      parameters:
+        - $ref: "#/components/parameters/UUID"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PointCreate"
+      responses:
+        "200":
+          description: Updated
+    delete:
+      summary: Delete point
+      parameters:
+        - $ref: "#/components/parameters/UUID"
+      responses:
+        "204":
+          description: Deleted
+
+  /points/{id}/history/:
+    get:
+      summary: Get point history
+      parameters:
+        - $ref: "#/components/parameters/UUID"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Intervention"
+
+  /labels/:
+    get:
+      summary: List labels
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Label"
+
+  /interventions/:
+    get:
+      summary: List interventions
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Intervention"
+    post:
+      summary: Create intervention
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InterventionCreate"
+      responses:
+        "201":
+          description: Created
+
+  /parcours-points/:
+    get:
+      summary: List parcours points
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ParcoursPoint"
+    post:
+      summary: Create parcours point
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ParcoursPointCreate"
+      responses:
+        "201":
+          description: Created
+
+components:
+
+  parameters:
+    UUID:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+
+    Label:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+
+    Point:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        photo:
+          type: string
+          nullable: true
+        comment:
+          type: string
+        label:
+          $ref: "#/components/schemas/Label"
+        is_treated:
+          type: boolean
+        last_treatment_date:
+          type: string
+          format: date
+          nullable: true
+        created_by:
+          $ref: "#/components/schemas/User"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    PointCreate:
+      type: object
+      required: [name, latitude, longitude, label_id]
+      properties:
+        name:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        label_id:
+          type: string
+          format: uuid
+        comment:
+          type: string
+        is_treated:
+          type: boolean
+
+    ParcoursPoint:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        point:
+          $ref: "#/components/schemas/Point"
+        visit_order:
+          type: integer
+        is_completed_in_mission:
+          type: boolean
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    ParcoursPointCreate:
+      type: object
+      required: [point_id, visit_order]
+      properties:
+        point_id:
+          type: string
+          format: uuid
+        visit_order:
+          type: integer
+
+    Parcours:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        distance_km:
+          type: number
+        duration_min:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        started_at:
+          type: string
+          format: date-time
+          nullable: true
+        finished_at:
+          type: string
+          format: date-time
+          nullable: true
+        parcours_points:
+          type: array
+          items:
+            $ref: "#/components/schemas/ParcoursPoint"
+        total_points:
+          type: integer
+        treated_points:
+          type: integer
+
+    Intervention:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        point:
+          $ref: "#/components/schemas/Point"
+        intervention_type:
+          type: string
+          enum: [added, treated, updated, checked]
+        comment:
+          type: string
+        performed_by:
+          $ref: "#/components/schemas/User"
+        performed_at:
+          type: string
+          format: date-time
+
+    InterventionCreate:
+      type: object
+      required: [point_id, intervention_type]
+      properties:
+        point_id:
+          type: string
+          format: uuid
+        intervention_type:
+          type: string
+        comment:
+          type: string
