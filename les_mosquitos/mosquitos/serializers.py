@@ -114,6 +114,7 @@ class InterventionSerializer(serializers.ModelSerializer):
             "id",
             "point",
             "point_id",
+            "intervention_type",
             "comment",
             "performed_by",
             "performed_at",

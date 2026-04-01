@@ -80,12 +80,21 @@ class LabelViewSet(ModelViewSet):
 
 
 class PointViewSet(ModelViewSet):
-    queryset = Point.objects.select_related("label", "created_by")
+    queryset = Point.objects.select_related("label", "created_by").prefetch_related(
+        "photos"
+    )
     serializer_class = PointSerializer
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        for point in queryset:
+            point.check_treatment_status()
+        return queryset
+    
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
-
+        user = self.request.user if self.request.user.is_authenticated else None
+        serializer.save(created_by=user)
+ 
     @action(detail=True, methods=["get"])
     def history(self, request, pk=None):
         point = self.get_object()
@@ -137,7 +146,8 @@ class InterventionViewSet(ModelViewSet):
     serializer_class = InterventionSerializer
 
     def perform_create(self, serializer):
-        serializer.save(performed_by=self.request.user)
+        user = self.request.user if self.request.user.is_authenticated else None
+        serializer.save(performed_by=user)
 
 
 class MissionTrackViewSet(ModelViewSet):

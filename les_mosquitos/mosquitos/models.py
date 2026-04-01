@@ -97,8 +97,21 @@ class ParcoursPoint(models.Model):
 class Intervention(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
+    INTERVENTION_TYPES = [
+        ("added", "Ajout"),
+        ("treated", "Traité"),
+        ("updated", "Mis à jour"),
+        ("checked", "Vérifié"),
+    ]
+
     point = models.ForeignKey(
         Point, related_name="interventions", on_delete=models.CASCADE
+    )
+
+    intervention_type = models.CharField(
+        max_length=20,
+        choices=INTERVENTION_TYPES,
+        default="treated",
     )
 
     comment = models.TextField(blank=True)
