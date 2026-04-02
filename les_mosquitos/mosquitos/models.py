@@ -1,4 +1,6 @@
+from urllib import request as urllib_request
 import uuid
+from rest_framework.response import Response
 
 from django.db import models
 from django.contrib.auth.models import User
@@ -50,9 +52,6 @@ class Point(models.Model):
         if self.label and not self.label.is_treatable:
             self.is_treated = False
         super().save(*args, **kwargs)
-
-    def __str__(self):
-        return self.name
 
 
 class PointPhoto(models.Model):

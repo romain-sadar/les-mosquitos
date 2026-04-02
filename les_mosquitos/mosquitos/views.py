@@ -122,7 +122,13 @@ class PointViewSet(ModelViewSet):
 
     def perform_create(self, serializer):
         user = self.request.user if self.request.user.is_authenticated else None
-        serializer.save(created_by=user)
+        point = serializer.save(created_by=user)
+
+        Intervention.objects.create(
+            point=point,
+            intervention_type="added",
+            performed_by=user,
+        )
 
     @action(detail=True, methods=["get"])
     def history(self, request, pk=None):
@@ -135,9 +141,19 @@ class PointViewSet(ModelViewSet):
     def mark_treated(self, request, pk=None):
         point = self.get_object()
 
-        point.is_treated = True
-        point.last_treatment_date = timezone.now()
-        point.save()
+        if not point.label or not point.label.is_treatable:
+            return Response({"error": "Point is not treatable"}, status=400)
+
+        if not point.is_treated:
+            point.is_treated = True
+            point.last_treatment_date = timezone.now()
+            point.save()
+
+            Intervention.objects.create(
+                point=point,
+                intervention_type="treated",
+                performed_by=request.user,
+            )
 
         return Response({"status": "treated"})
 
