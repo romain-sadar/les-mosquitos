@@ -57,7 +57,6 @@ class PointSerializer(serializers.ModelSerializer):
             "comment",
             "label",
             "label_id",
-            "label__is_treatable",
             "photos",
             "is_treated",
             "last_treatment_date",
