@@ -12,10 +12,22 @@ from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
-import requests
+import math
 import os
 
+import requests
+
 from django.conf import settings
+
+
+def _haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """Great-circle distance in km (for ordering waypoints by proximity to a start)."""
+    r_km = 6371.0
+    p1, p2 = math.radians(lat1), math.radians(lat2)
+    dlat = math.radians(lat2 - lat1)
+    dlon = math.radians(lon2 - lon1)
+    a = math.sin(dlat / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dlon / 2) ** 2
+    return r_km * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
 from .models import (
     Parcours,
@@ -270,6 +282,32 @@ class ParcoursViewSet(ModelViewSet):
             .filter(point__is_treated=False)
             .order_by("visit_order")
         )
+
+        # Same point linked twice would duplicate waypoints and confuse Mapbox / the client.
+        seen_point_ids = set()
+        deduped = []
+        for pp in parcours_points:
+            pid = pp.point_id
+            if pid in seen_point_ids:
+                continue
+            seen_point_ids.add(pid)
+            deduped.append(pp)
+        parcours_points = deduped
+
+        if start_lat and start_lng:
+            try:
+                slat = float(start_lat)
+                slng = float(start_lng)
+                parcours_points.sort(
+                    key=lambda pp: _haversine_km(
+                        slat,
+                        slng,
+                        float(pp.point.latitude),
+                        float(pp.point.longitude),
+                    )
+                )
+            except (TypeError, ValueError):
+                pass
 
         if len(parcours_points) < 2:
             return Response(
