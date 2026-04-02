@@ -4,6 +4,7 @@ from django.db import transaction
 from django.utils import timezone
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
+from collections import defaultdict
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -184,6 +185,24 @@ class ParcoursViewSet(ModelViewSet):
             for pid in point_ids:
                 if not ParcoursPoint.objects.filter(point_id=pid).exists():
                     Point.objects.filter(pk=pid).delete()
+
+    @action(detail=True, methods=["get"])
+    def history(self, request, pk=None):
+        parcours = self.get_object()
+        point_ids = parcours.parcours_points.values_list("point_id", flat=True)
+        interventions = (
+            Intervention.objects.filter(point_id__in=point_ids)
+            .select_related("point", "performed_by")
+            .order_by("performed_at")
+        )
+
+        grouped = defaultdict(list)
+        for intervention in interventions:
+            grouped[intervention.point.id].append(
+                InterventionSerializer(intervention).data
+            )
+
+        return Response(grouped)
 
     @action(detail=True, methods=["post"])
     def add_point(self, request, pk=None):
