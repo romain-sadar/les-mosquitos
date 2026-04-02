@@ -11,6 +11,7 @@ class Label(models.Model):
 
     name = models.CharField(max_length=100)
     color = models.CharField(max_length=20, null=True, blank=True)
+    is_treatable = models.BooleanField(default=True)
 
     def __str__(self):
         return self.name
@@ -43,6 +44,11 @@ class Point(models.Model):
             if timezone.now() - self.last_treatment_date > timedelta(weeks=6):
                 self.is_treated = False
                 self.save()
+
+    def save(self, *args, **kwargs):
+        if self.label and self.label.is_treatable:
+            self.is_treated = False
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name

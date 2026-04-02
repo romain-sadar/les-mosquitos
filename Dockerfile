@@ -22,6 +22,7 @@ RUN apt-get update && apt-get install -y \
 
 # Installer uv
 RUN pip install --no-cache-dir uv
+RUN pip install Pillow
 
 WORKDIR /app
 
