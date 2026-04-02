@@ -7,147 +7,209 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('mosquitos', '0001_initial'),
+        ("mosquitos", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='intervention',
+            name="intervention",
             options={},
         ),
         migrations.AlterModelOptions(
-            name='parcours',
+            name="parcours",
             options={},
         ),
         migrations.AlterModelOptions(
-            name='parcourspoint',
+            name="parcourspoint",
             options={},
         ),
         migrations.AlterModelOptions(
-            name='point',
+            name="point",
             options={},
         ),
         migrations.AlterModelOptions(
-            name='useractivity',
+            name="useractivity",
             options={},
         ),
         migrations.AlterUniqueTogether(
-            name='parcourspoint',
+            name="parcourspoint",
             unique_together=set(),
         ),
         migrations.RemoveField(
-            model_name='intervention',
-            name='intervention_type',
+            model_name="intervention",
+            name="intervention_type",
         ),
         migrations.RemoveField(
-            model_name='point',
-            name='photo',
+            model_name="point",
+            name="photo",
         ),
         migrations.AddField(
-            model_name='label',
-            name='color',
+            model_name="label",
+            name="color",
             field=models.CharField(blank=True, max_length=20, null=True),
         ),
         migrations.AddField(
-            model_name='parcours',
-            name='planned_path',
+            model_name="parcours",
+            name="planned_path",
             field=models.JSONField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='point',
-            name='description',
+            model_name="point",
+            name="description",
             field=models.TextField(blank=True),
         ),
         migrations.AlterField(
-            model_name='intervention',
-            name='performed_by',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL),
+            model_name="intervention",
+            name="performed_by",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.AlterField(
-            model_name='label',
-            name='name',
+            model_name="label",
+            name="name",
             field=models.CharField(max_length=100),
         ),
         migrations.AlterField(
-            model_name='parcours',
-            name='distance_km',
+            model_name="parcours",
+            name="distance_km",
             field=models.FloatField(default=0),
         ),
         migrations.AlterField(
-            model_name='parcours',
-            name='duration_min',
+            model_name="parcours",
+            name="duration_min",
             field=models.IntegerField(default=0),
         ),
         migrations.AlterField(
-            model_name='parcourspoint',
-            name='point',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='mosquitos.point'),
+            model_name="parcourspoint",
+            name="point",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, to="mosquitos.point"
+            ),
         ),
         migrations.AlterField(
-            model_name='parcourspoint',
-            name='visit_order',
+            model_name="parcourspoint",
+            name="visit_order",
             field=models.IntegerField(),
         ),
         migrations.AlterField(
-            model_name='point',
-            name='created_by',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL),
+            model_name="point",
+            name="created_by",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.AlterField(
-            model_name='point',
-            name='label',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='mosquitos.label'),
+            model_name="point",
+            name="label",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                to="mosquitos.label",
+            ),
         ),
         migrations.AlterField(
-            model_name='point',
-            name='last_treatment_date',
+            model_name="point",
+            name="last_treatment_date",
             field=models.DateTimeField(blank=True, null=True),
         ),
         migrations.AlterField(
-            model_name='point',
-            name='name',
+            model_name="point",
+            name="name",
             field=models.CharField(max_length=255),
         ),
         migrations.AlterField(
-            model_name='useractivity',
-            name='action_type',
-            field=models.CharField(choices=[('create_point', 'Create Point'), ('treat_point', 'Treat Point'), ('create_parcours', 'Create Parcours')], max_length=50),
+            model_name="useractivity",
+            name="action_type",
+            field=models.CharField(
+                choices=[
+                    ("create_point", "Create Point"),
+                    ("treat_point", "Treat Point"),
+                    ("create_parcours", "Create Parcours"),
+                ],
+                max_length=50,
+            ),
         ),
         migrations.AlterField(
-            model_name='useractivity',
-            name='parcours',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='mosquitos.parcours'),
+            model_name="useractivity",
+            name="parcours",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="mosquitos.parcours",
+            ),
         ),
         migrations.AlterField(
-            model_name='useractivity',
-            name='point',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='mosquitos.point'),
+            model_name="useractivity",
+            name="point",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="mosquitos.point",
+            ),
         ),
         migrations.AlterField(
-            model_name='useractivity',
-            name='user',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL),
+            model_name="useractivity",
+            name="user",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL
+            ),
         ),
         migrations.CreateModel(
-            name='MissionTrack',
+            name="MissionTrack",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('latitude', models.FloatField()),
-                ('longitude', models.FloatField()),
-                ('recorded_at', models.DateTimeField(auto_now_add=True)),
-                ('parcours', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='gps_tracks', to='mosquitos.parcours')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("latitude", models.FloatField()),
+                ("longitude", models.FloatField()),
+                ("recorded_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "parcours",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="gps_tracks",
+                        to="mosquitos.parcours",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='PointPhoto',
+            name="PointPhoto",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('image', models.ImageField(upload_to='points/')),
-                ('uploaded_at', models.DateTimeField(auto_now_add=True)),
-                ('point', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='photos', to='mosquitos.point')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("image", models.ImageField(upload_to="points/")),
+                ("uploaded_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "point",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="photos",
+                        to="mosquitos.point",
+                    ),
+                ),
             ],
         ),
     ]

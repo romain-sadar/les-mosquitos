@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('mosquitos', '0003_intervention_intervention_type'),
+        ("mosquitos", "0003_intervention_intervention_type"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='label',
-            name='is_treatable',
+            model_name="label",
+            name="is_treatable",
             field=models.BooleanField(default=True),
         ),
     ]

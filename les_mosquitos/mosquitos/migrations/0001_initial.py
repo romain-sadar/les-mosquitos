@@ -7,7 +7,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
@@ -16,92 +15,240 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Label',
+            name="Label",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('name', models.CharField(max_length=255)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("name", models.CharField(max_length=255)),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
         migrations.CreateModel(
-            name='Parcours',
+            name="Parcours",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('name', models.CharField(max_length=255)),
-                ('description', models.TextField(blank=True, null=True)),
-                ('distance_km', models.DecimalField(blank=True, decimal_places=2, max_digits=6, null=True)),
-                ('duration_min', models.PositiveIntegerField(blank=True, null=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('started_at', models.DateTimeField(blank=True, null=True)),
-                ('finished_at', models.DateTimeField(blank=True, null=True)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("name", models.CharField(max_length=255)),
+                ("description", models.TextField(blank=True, null=True)),
+                (
+                    "distance_km",
+                    models.DecimalField(
+                        blank=True, decimal_places=2, max_digits=6, null=True
+                    ),
+                ),
+                ("duration_min", models.PositiveIntegerField(blank=True, null=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("started_at", models.DateTimeField(blank=True, null=True)),
+                ("finished_at", models.DateTimeField(blank=True, null=True)),
             ],
             options={
-                'ordering': ['-created_at'],
+                "ordering": ["-created_at"],
             },
         ),
         migrations.CreateModel(
-            name='Point',
+            name="Point",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('name', models.CharField(max_length=100)),
-                ('latitude', models.FloatField()),
-                ('longitude', models.FloatField()),
-                ('photo', models.ImageField(blank=True, null=True, upload_to='points/')),
-                ('comment', models.TextField(blank=True)),
-                ('is_treated', models.BooleanField(default=False)),
-                ('last_treatment_date', models.DateField(blank=True, null=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('created_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='created_points', to=settings.AUTH_USER_MODEL)),
-                ('label', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='points', to='mosquitos.label')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("name", models.CharField(max_length=100)),
+                ("latitude", models.FloatField()),
+                ("longitude", models.FloatField()),
+                (
+                    "photo",
+                    models.ImageField(blank=True, null=True, upload_to="points/"),
+                ),
+                ("comment", models.TextField(blank=True)),
+                ("is_treated", models.BooleanField(default=False)),
+                ("last_treatment_date", models.DateField(blank=True, null=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "created_by",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="created_points",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "label",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="points",
+                        to="mosquitos.label",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-created_at'],
+                "ordering": ["-created_at"],
             },
         ),
         migrations.CreateModel(
-            name='Intervention',
+            name="Intervention",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('intervention_type', models.CharField(choices=[('added', 'Ajout'), ('treated', 'Traité'), ('updated', 'Mis à jour'), ('checked', 'Vérifié')], max_length=20)),
-                ('comment', models.TextField(blank=True)),
-                ('performed_at', models.DateTimeField(auto_now_add=True)),
-                ('performed_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='interventions_done', to=settings.AUTH_USER_MODEL)),
-                ('point', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='interventions', to='mosquitos.point')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                (
+                    "intervention_type",
+                    models.CharField(
+                        choices=[
+                            ("added", "Ajout"),
+                            ("treated", "Traité"),
+                            ("updated", "Mis à jour"),
+                            ("checked", "Vérifié"),
+                        ],
+                        max_length=20,
+                    ),
+                ),
+                ("comment", models.TextField(blank=True)),
+                ("performed_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "performed_by",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="interventions_done",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "point",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="interventions",
+                        to="mosquitos.point",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-performed_at'],
+                "ordering": ["-performed_at"],
             },
         ),
         migrations.CreateModel(
-            name='UserActivity',
+            name="UserActivity",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('action_type', models.CharField(choices=[('point_added', 'Ajout d’un point'), ('point_treated', 'Traitement d’un point'), ('mission_created', 'Création d’une cartographie')], max_length=30)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('parcours', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='activities', to='mosquitos.parcours')),
-                ('point', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='activities', to='mosquitos.point')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='activities', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                (
+                    "action_type",
+                    models.CharField(
+                        choices=[
+                            ("point_added", "Ajout d’un point"),
+                            ("point_treated", "Traitement d’un point"),
+                            ("mission_created", "Création d’une cartographie"),
+                        ],
+                        max_length=30,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "parcours",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="activities",
+                        to="mosquitos.parcours",
+                    ),
+                ),
+                (
+                    "point",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="activities",
+                        to="mosquitos.point",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="activities",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-created_at'],
+                "ordering": ["-created_at"],
             },
         ),
         migrations.CreateModel(
-            name='ParcoursPoint',
+            name="ParcoursPoint",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('visit_order', models.PositiveIntegerField()),
-                ('is_completed_in_mission', models.BooleanField(default=False)),
-                ('completed_at', models.DateTimeField(blank=True, null=True)),
-                ('parcours', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='parcours_points', to='mosquitos.parcours')),
-                ('point', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='parcours_points', to='mosquitos.point')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("visit_order", models.PositiveIntegerField()),
+                ("is_completed_in_mission", models.BooleanField(default=False)),
+                ("completed_at", models.DateTimeField(blank=True, null=True)),
+                (
+                    "parcours",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="parcours_points",
+                        to="mosquitos.parcours",
+                    ),
+                ),
+                (
+                    "point",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="parcours_points",
+                        to="mosquitos.point",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['visit_order'],
-                'unique_together': {('parcours', 'point')},
+                "ordering": ["visit_order"],
+                "unique_together": {("parcours", "point")},
             },
         ),
     ]

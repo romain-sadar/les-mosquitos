@@ -4,15 +4,26 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('mosquitos', '0002_alter_intervention_options_alter_parcours_options_and_more'),
+        (
+            "mosquitos",
+            "0002_alter_intervention_options_alter_parcours_options_and_more",
+        ),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='intervention',
-            name='intervention_type',
-            field=models.CharField(choices=[('added', 'Ajout'), ('treated', 'Traité'), ('updated', 'Mis à jour'), ('checked', 'Vérifié')], default='treated', max_length=20),
+            model_name="intervention",
+            name="intervention_type",
+            field=models.CharField(
+                choices=[
+                    ("added", "Ajout"),
+                    ("treated", "Traité"),
+                    ("updated", "Mis à jour"),
+                    ("checked", "Vérifié"),
+                ],
+                default="treated",
+                max_length=20,
+            ),
         ),
     ]

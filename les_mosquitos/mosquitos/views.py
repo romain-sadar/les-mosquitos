@@ -32,11 +32,7 @@ from .serializers import (
 )
 
 
-from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
 
 
 class LoginView(APIView):
@@ -63,10 +59,6 @@ class LoginView(APIView):
                 },
             }
         )
-
-
-from django.contrib.auth.models import User
-from rest_framework.authtoken.models import Token
 
 
 class RegisterView(APIView):
@@ -119,11 +111,11 @@ class PointViewSet(ModelViewSet):
         for point in queryset:
             point.check_treatment_status()
         return queryset
-    
+
     def perform_create(self, serializer):
         user = self.request.user if self.request.user.is_authenticated else None
         serializer.save(created_by=user)
- 
+
     @action(detail=True, methods=["get"])
     def history(self, request, pk=None):
         point = self.get_object()
@@ -164,27 +156,24 @@ class ParcoursViewSet(ModelViewSet):
         ParcoursPoint.objects.create(parcours=parcours, point=point, visit_order=order)
 
         return Response({"status": "point ajouté"})
-    
+
     @action(detail=True, methods=["get"])
     def optimize(self, request, pk=None):
         parcours = self.get_object()
 
-        parcours_points = (
-            parcours.parcours_points
-            .select_related("point")
-            .order_by("visit_order")
+        parcours_points = parcours.parcours_points.select_related("point").order_by(
+            "visit_order"
         )
 
         if parcours_points.count() < 2:
             return Response(
                 {"error": "Minimum 2 points required"},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
-        coordinates = ";".join([
-            f"{pp.point.longitude},{pp.point.latitude}"
-            for pp in parcours_points
-        ])
+        coordinates = ";".join(
+            [f"{pp.point.longitude},{pp.point.latitude}" for pp in parcours_points]
+        )
 
         token = os.getenv("MAPBOX_TOKEN")
 
@@ -205,27 +194,26 @@ class ParcoursViewSet(ModelViewSet):
 
         trip = data["trips"][0]
 
-        ordered_waypoints = sorted(
-            data["waypoints"],
-            key=lambda x: x["waypoint_index"]
-        )
+        ordered_waypoints = sorted(data["waypoints"], key=lambda x: x["waypoint_index"])
 
         optimized_points = []
 
         for idx, wp in enumerate(ordered_waypoints):
             pp = list(parcours_points)[idx]
 
-            optimized_points.append({
-                "point_id": str(pp.point.id),
-                "name": pp.point.name,
-                "latitude": pp.point.latitude,
-                "longitude": pp.point.longitude,
-                "optimized_order": wp["waypoint_index"]
-            })
-            
+            optimized_points.append(
+                {
+                    "point_id": str(pp.point.id),
+                    "name": pp.point.name,
+                    "latitude": pp.point.latitude,
+                    "longitude": pp.point.longitude,
+                    "optimized_order": wp["waypoint_index"],
+                }
+            )
+
         distance_km = round(trip["distance"] / 1000, 2)
         duration_min = round(trip["duration"] / 60)
-        
+
         return Response(
             {
                 "distance_km": distance_km,
