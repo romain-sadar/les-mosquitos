@@ -1,6 +1,9 @@
 from django.utils import timezone
 from datetime import timedelta
 from les_mosquitos.mosquitos.models import Point
+import pytest
+
+pytestmark = pytest.mark.django_db
 
 
 def test_create_point(auth_client, label):

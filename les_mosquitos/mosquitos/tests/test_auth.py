@@ -1,3 +1,8 @@
+import pytest
+
+pytestmark = pytest.mark.django_db
+
+
 def test_register(api_client):
     response = api_client.post(
         "/api/register/", {"username": "newuser", "password": "password123"}

@@ -32,7 +32,6 @@ from .serializers import (
     ParcoursPointSerializer,
     MissionTrackSerializer,
     PointPhotoSerializer,
-    MultiPointPhotoUploadSerializer,
 )
 
 
@@ -152,15 +151,14 @@ class PointPhotoViewSet(ModelViewSet):
     def create(self, request, *args, **kwargs):
         point_id = self.kwargs["point_pk"]
 
-        # validate point ownership (recommended)
         point = Point.objects.get(id=point_id)
         if point.created_by != request.user:
             return Response({"error": "Forbidden"}, status=403)
 
-        serializer = MultiPointPhotoUploadSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        images = request.FILES.getlist("images")
 
-        images = serializer.validated_data["images"]
+        if not images:
+            return Response({"error": "No images provided"}, status=400)
 
         photos = [PointPhoto(point_id=point_id, image=image) for image in images]
 
@@ -168,7 +166,7 @@ class PointPhotoViewSet(ModelViewSet):
 
         return Response(
             PointPhotoSerializer(created_photos, many=True).data,
-            status=status.HTTP_201_CREATED,
+            status=201,
         )
 
 

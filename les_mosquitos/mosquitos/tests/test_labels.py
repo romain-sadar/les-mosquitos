@@ -1,3 +1,8 @@
+import pytest
+
+pytestmark = pytest.mark.django_db
+
+
 def test_create_label(auth_client):
     client, _ = auth_client
 

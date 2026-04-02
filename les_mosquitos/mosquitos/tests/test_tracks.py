@@ -1,3 +1,8 @@
+import pytest
+
+pytestmark = pytest.mark.django_db
+
+
 def test_create_track(auth_client, parcours):
     client, _ = auth_client
 

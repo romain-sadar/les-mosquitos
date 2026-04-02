@@ -8,6 +8,7 @@ ENV PYTHONUNBUFFERED=1
 
 ENV UV_PROJECT_ENVIRONMENT=/opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
+ENV PYTHONPATH=/app
 
 # Dépendances système (PostgreSQL + GIS)
 RUN apt-get update && apt-get install -y \

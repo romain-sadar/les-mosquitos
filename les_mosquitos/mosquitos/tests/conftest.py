@@ -5,6 +5,8 @@ from rest_framework.authtoken.models import Token
 
 from les_mosquitos.mosquitos.models import Label, Point, Parcours
 
+pytestmark = pytest.mark.django_db
+
 
 @pytest.fixture
 def api_client():

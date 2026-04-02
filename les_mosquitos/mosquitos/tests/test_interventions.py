@@ -1,3 +1,8 @@
+import pytest
+
+pytestmark = pytest.mark.django_db
+
+
 def test_create_intervention(auth_client, point):
     client, _ = auth_client
 

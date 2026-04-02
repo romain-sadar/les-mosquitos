@@ -1,6 +1,10 @@
 from unittest.mock import patch
 from les_mosquitos.mosquitos.models import ParcoursPoint, Point
 
+import pytest
+
+pytestmark = pytest.mark.django_db
+
 
 def test_add_point(auth_client, point, parcours):
     client, _ = auth_client
