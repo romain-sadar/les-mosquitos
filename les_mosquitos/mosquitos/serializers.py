@@ -24,11 +24,6 @@ class LabelSerializer(serializers.ModelSerializer):
         fields = ["id", "name", "color"]
 
 
-class PointPhotoSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = PointPhoto
-        fields = ["id", "image", "uploaded_at"]
-
 
 class PointSerializer(serializers.ModelSerializer):
     label = LabelSerializer(read_only=True)
@@ -61,6 +56,12 @@ class PointSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
+
+class PointPhotoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PointPhoto
+        fields = ["id", "point", "image", "uploaded_at"]
+        read_only_fields = ["id", "uploaded_at"]
 
 class ParcoursPointSerializer(serializers.ModelSerializer):
     point = PointSerializer(read_only=True)

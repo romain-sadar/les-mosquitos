@@ -20,6 +20,7 @@ from .models import (
     Intervention,
     ParcoursPoint,
     MissionTrack,
+    PointPhoto,
 )
 
 from .serializers import (
@@ -29,6 +30,7 @@ from .serializers import (
     InterventionSerializer,
     ParcoursPointSerializer,
     MissionTrackSerializer,
+    PointPhotoSerializer,
 )
 
 
@@ -132,6 +134,16 @@ class PointViewSet(ModelViewSet):
         point.save()
 
         return Response({"status": "treated"})
+    
+class PointPhotoViewSet(viewsets.ModelViewSet):
+    serializer_class = PointPhotoSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return PointPhoto.objects.filter(point_id=self.kwargs["point_pk"])
+
+    def perform_create(self, serializer):
+        serializer.save(point_id=self.kwargs["point_pk"])
 
 
 class ParcoursViewSet(ModelViewSet):
