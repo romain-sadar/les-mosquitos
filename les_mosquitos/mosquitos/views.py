@@ -1,6 +1,8 @@
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.utils import timezone
+from rest_framework.permissions import IsAuthenticated
+
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -30,6 +32,13 @@ from .serializers import (
 )
 
 
+from django.contrib.auth import authenticate
+from rest_framework.authtoken.models import Token
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+
+
 class LoginView(APIView):
     def post(self, request):
         username = request.data.get("username")
@@ -39,15 +48,25 @@ class LoginView(APIView):
 
         if not user:
             return Response(
-                {"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED
+                {"error": "Invalid credentials"},
+                status=status.HTTP_401_UNAUTHORIZED,
             )
+
+        token, _ = Token.objects.get_or_create(user=user)
 
         return Response(
             {
-                "id": user.id,
-                "username": user.username,
+                "token": token.key,
+                "user": {
+                    "id": user.id,
+                    "username": user.username,
+                },
             }
         )
+
+
+from django.contrib.auth.models import User
+from rest_framework.authtoken.models import Token
 
 
 class RegisterView(APIView):
@@ -63,26 +82,33 @@ class RegisterView(APIView):
 
         if User.objects.filter(username=username).exists():
             return Response(
-                {"error": "Username already exists"}, status=status.HTTP_400_BAD_REQUEST
+                {"error": "Username already exists"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         user = User.objects.create_user(username=username, password=password)
+        token = Token.objects.create(user=user)
 
         return Response(
             {
-                "id": user.id,
-                "username": user.username,
+                "token": token.key,
+                "user": {
+                    "id": user.id,
+                    "username": user.username,
+                },
             },
             status=status.HTTP_201_CREATED,
         )
 
 
 class LabelViewSet(ModelViewSet):
+    permission_classes = [IsAuthenticated]
     queryset = Label.objects.all()
     serializer_class = LabelSerializer
 
 
 class PointViewSet(ModelViewSet):
+    permission_classes = [IsAuthenticated]
     queryset = Point.objects.select_related("label", "created_by").prefetch_related(
         "photos"
     )
@@ -117,6 +143,7 @@ class PointViewSet(ModelViewSet):
 
 
 class ParcoursViewSet(ModelViewSet):
+    permission_classes = [IsAuthenticated]
     queryset = Parcours.objects.prefetch_related("parcours_points__point")
     serializer_class = ParcoursSerializer
 
@@ -210,11 +237,13 @@ class ParcoursViewSet(ModelViewSet):
 
 
 class ParcoursPointViewSet(ModelViewSet):
+    permission_classes = [IsAuthenticated]
     queryset = ParcoursPoint.objects.select_related("parcours", "point")
     serializer_class = ParcoursPointSerializer
 
 
 class InterventionViewSet(ModelViewSet):
+    permission_classes = [IsAuthenticated]
     queryset = Intervention.objects.select_related("point", "performed_by")
     serializer_class = InterventionSerializer
 
@@ -224,5 +253,6 @@ class InterventionViewSet(ModelViewSet):
 
 
 class MissionTrackViewSet(ModelViewSet):
+    permission_classes = [IsAuthenticated]
     queryset = MissionTrack.objects.select_related("parcours")
     serializer_class = MissionTrackSerializer

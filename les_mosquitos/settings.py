@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # REST API
     "rest_framework",
+    "rest_framework.authtoken",
     # CORS Flutter
     "corsheaders",
     # app
