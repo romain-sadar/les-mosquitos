@@ -1,5 +1,6 @@
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
+from django.db import transaction
 from django.utils import timezone
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
@@ -175,6 +176,16 @@ class ParcoursViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated]
     queryset = Parcours.objects.prefetch_related("parcours_points__point")
     serializer_class = ParcoursSerializer
+
+    def perform_destroy(self, instance):
+        point_ids = list(
+            instance.parcours_points.values_list("point_id", flat=True).distinct()
+        )
+        with transaction.atomic():
+            instance.delete()
+            for pid in point_ids:
+                if not ParcoursPoint.objects.filter(point_id=pid).exists():
+                    Point.objects.filter(pk=pid).delete()
 
     @action(detail=True, methods=["post"])
     def add_point(self, request, pk=None):

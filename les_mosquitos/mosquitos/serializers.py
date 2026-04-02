@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 from .models import (
     Parcours,
@@ -64,6 +65,14 @@ class PointSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
+
+    def update(self, instance, validated_data):
+        if "is_treated" in validated_data:
+            if validated_data["is_treated"] and not instance.is_treated:
+                validated_data.setdefault("last_treatment_date", timezone.now())
+            elif not validated_data["is_treated"]:
+                validated_data["last_treatment_date"] = None
+        return super().update(instance, validated_data)
 
 
 class ParcoursPointSerializer(serializers.ModelSerializer):
