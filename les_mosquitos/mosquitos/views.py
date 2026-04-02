@@ -7,6 +7,9 @@ from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
+import requests
+import os
+
 
 from .models import (
     Parcours,
@@ -134,6 +137,76 @@ class ParcoursViewSet(ModelViewSet):
         ParcoursPoint.objects.create(parcours=parcours, point=point, visit_order=order)
 
         return Response({"status": "point ajouté"})
+    
+    @action(detail=True, methods=["get"])
+    def optimize(self, request, pk=None):
+        parcours = self.get_object()
+
+        parcours_points = (
+            parcours.parcours_points
+            .select_related("point")
+            .order_by("visit_order")
+        )
+
+        if parcours_points.count() < 2:
+            return Response(
+                {"error": "Minimum 2 points required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        coordinates = ";".join([
+            f"{pp.point.longitude},{pp.point.latitude}"
+            for pp in parcours_points
+        ])
+
+        token = os.getenv("MAPBOX_TOKEN")
+
+        url = (
+            f"https://api.mapbox.com/optimized-trips/v1/mapbox/walking/{coordinates}"
+            f"?geometries=geojson"
+            f"&source=first"
+            f"&destination=last"
+            f"&roundtrip=false"
+            f"&access_token={token}"
+        )
+
+        response = requests.get(url, timeout=10)
+        data = response.json()
+
+        if "trips" not in data:
+            return Response(data, status=status.HTTP_400_BAD_REQUEST)
+
+        trip = data["trips"][0]
+
+        ordered_waypoints = sorted(
+            data["waypoints"],
+            key=lambda x: x["waypoint_index"]
+        )
+
+        optimized_points = []
+
+        for idx, wp in enumerate(ordered_waypoints):
+            pp = list(parcours_points)[idx]
+
+            optimized_points.append({
+                "point_id": str(pp.point.id),
+                "name": pp.point.name,
+                "latitude": pp.point.latitude,
+                "longitude": pp.point.longitude,
+                "optimized_order": wp["waypoint_index"]
+            })
+            
+        distance_km = round(trip["distance"] / 1000, 2)
+        duration_min = round(trip["duration"] / 60)
+        
+        return Response(
+            {
+                "distance_km": distance_km,
+                "duration_min": duration_min,
+                "geometry": trip["geometry"],
+                "optimized_points": optimized_points,
+            }
+        )
 
 
 class ParcoursPointViewSet(ModelViewSet):
