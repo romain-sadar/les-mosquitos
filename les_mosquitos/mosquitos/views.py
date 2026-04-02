@@ -137,7 +137,6 @@ class PointViewSet(ModelViewSet):
         return Response({"status": "treated"})
 
 
-
 class PointPhotoViewSet(ModelViewSet):
     serializer_class = PointPhotoSerializer
     permission_classes = [IsAuthenticated]
@@ -158,16 +157,13 @@ class PointPhotoViewSet(ModelViewSet):
 
         images = serializer.validated_data["images"]
 
-        photos = [
-            PointPhoto(point_id=point_id, image=image)
-            for image in images
-        ]
+        photos = [PointPhoto(point_id=point_id, image=image) for image in images]
 
         created_photos = PointPhoto.objects.bulk_create(photos)
 
         return Response(
             PointPhotoSerializer(created_photos, many=True).data,
-            status=status.HTTP_201_CREATED
+            status=status.HTTP_201_CREATED,
         )
 
 

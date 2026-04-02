@@ -30,11 +30,10 @@ class PointPhotoSerializer(serializers.ModelSerializer):
         fields = ["id", "point", "image", "uploaded_at"]
         read_only_fields = ["id", "uploaded_at"]
 
+
 class MultiPointPhotoUploadSerializer(serializers.Serializer):
-    images = serializers.ListField(
-        child=serializers.ImageField(),
-        allow_empty=False
-    )
+    images = serializers.ListField(child=serializers.ImageField(), allow_empty=False)
+
 
 class PointSerializer(serializers.ModelSerializer):
     label = LabelSerializer(read_only=True)
@@ -66,8 +65,6 @@ class PointSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-
-
 
 
 class ParcoursPointSerializer(serializers.ModelSerializer):
