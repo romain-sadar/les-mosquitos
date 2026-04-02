@@ -21,7 +21,7 @@ class UserSerializer(serializers.ModelSerializer):
 class LabelSerializer(serializers.ModelSerializer):
     class Meta:
         model = Label
-        fields = ["id", "name", "color"]
+        fields = ["id", "name", "color", "is_treatable"]
 
 
 class PointPhotoSerializer(serializers.ModelSerializer):
