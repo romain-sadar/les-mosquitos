@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.db import transaction
 from django.utils import timezone
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.exceptions import ValidationError
 
 from collections import defaultdict
 
@@ -130,32 +131,51 @@ class PointViewSet(ModelViewSet):
             performed_by=user,
         )
 
+    def perform_update(self, serializer):
+        instance = self.get_object()
+        user = self.request.user if self.request.user.is_authenticated else None
+
+        old_is_treated = instance.is_treated
+        old_values = {
+            "name": instance.name,
+            "description": instance.description,
+            "latitude": instance.latitude,
+            "longitude": instance.longitude,
+            "comment": instance.comment,
+            "label_id": instance.label_id,
+        }
+
+        updated_instance = serializer.save()
+
+        if updated_instance.is_treated and not old_is_treated:
+            if updated_instance.label and not updated_instance.label.is_treatable:
+                raise ValidationError("Point is not treatable")
+
+            Intervention.objects.create(
+                point=updated_instance,
+                intervention_type="treated",
+                performed_by=user,
+            )
+            return
+
+        changed = any(
+            getattr(updated_instance, field) != old_values[field]
+            for field in old_values
+        )
+
+        if changed:
+            Intervention.objects.create(
+                point=updated_instance,
+                intervention_type="updated",
+                performed_by=user,
+            )
+
     @action(detail=True, methods=["get"])
     def history(self, request, pk=None):
         point = self.get_object()
         interventions = point.interventions.select_related("performed_by")
         serializer = InterventionSerializer(interventions, many=True)
         return Response(serializer.data)
-
-    @action(detail=True, methods=["post"])
-    def mark_treated(self, request, pk=None):
-        point = self.get_object()
-
-        if not point.label or not point.label.is_treatable:
-            return Response({"error": "Point is not treatable"}, status=400)
-
-        if not point.is_treated:
-            point.is_treated = True
-            point.last_treatment_date = timezone.now()
-            point.save()
-
-            Intervention.objects.create(
-                point=point,
-                intervention_type="treated",
-                performed_by=request.user,
-            )
-
-        return Response({"status": "treated"})
 
 
 class PointPhotoViewSet(ModelViewSet):
