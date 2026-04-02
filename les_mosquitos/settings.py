@@ -4,6 +4,36 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+def _merge_env_from_dotenv() -> None:
+    """Load BASE_DIR/.env into os.environ for keys that are missing or empty (local dev + Docker volume)."""
+    path = BASE_DIR / ".env"
+    if not path.is_file():
+        return
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        key = key.strip()
+        if not key:
+            continue
+        value = value.strip()
+        if (value.startswith('"') and value.endswith('"')) or (
+            value.startswith("'") and value.endswith("'")
+        ):
+            value = value[1:-1]
+        if not value:
+            continue
+        current = os.environ.get(key, "").strip()
+        if not current:
+            os.environ[key] = value
+
+
+_merge_env_from_dotenv()
+
+
 SECRET_KEY = "django-insecure-p6l0(e76casyk7bx&cg0-827h&10s=7r#&$+2eb$5@o8ya8(5*"
 
 DEBUG = True
@@ -120,3 +150,6 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.SessionAuthentication",
     ],
 }
+
+# Mapbox (`mosquitos.views` optimize). Set in `.env` or container env.
+MAPBOX_TOKEN = os.environ.get("MAPBOX_TOKEN", "").strip()

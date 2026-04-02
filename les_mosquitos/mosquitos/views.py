@@ -15,6 +15,7 @@ from rest_framework.decorators import action
 import requests
 import os
 
+from django.conf import settings
 
 from .models import (
     Parcours,
@@ -264,13 +265,13 @@ class ParcoursViewSet(ModelViewSet):
         start_lng = request.query_params.get("start_lng")
         parcours = self.get_object()
 
-        parcours_points = (
+        parcours_points = list(
             parcours.parcours_points.select_related("point")
             .filter(point__is_treated=False)
             .order_by("visit_order")
         )
 
-        if parcours_points.count() < 2:
+        if len(parcours_points) < 2:
             return Response(
                 {"error": "Minimum 2 points required"},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -279,60 +280,81 @@ class ParcoursViewSet(ModelViewSet):
         coordinates_list = []
 
         if start_lat and start_lng:
-            coordinates_list.append(f"{start_lng},{start_lat}")
+            try:
+                coordinates_list.append(
+                    f"{float(start_lng)},{float(start_lat)}"
+                )
+            except (TypeError, ValueError):
+                pass
 
-        coordinates_list.extend([
-            f"{pp.point.longitude},{pp.point.latitude}"
-            for pp in parcours_points
-        ])
+        coordinates_list.extend(
+            f"{pp.point.longitude},{pp.point.latitude}" for pp in parcours_points
+        )
 
         coordinates = ";".join(coordinates_list)
 
-        token = os.getenv("MAPBOX_TOKEN")
+        token = (getattr(settings, "MAPBOX_TOKEN", "") or "").strip()
 
-        url = (
-            f"https://api.mapbox.com/optimized-trips/v1/mapbox/walking/{coordinates}"
-            f"?geometries=geojson"
-            f"&source=first"
-            f"&destination=any"
-            f"&roundtrip=false"
-            f"&access_token={token}"
+        if not token:
+            return Response(
+                {"error": "MAPBOX_TOKEN is not configured on the server"},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        # Directions API (walking, visit order). Optimized-Trips returned 200 + "This request is not supported".
+        url = f"https://api.mapbox.com/directions/v5/mapbox/walking/{coordinates}"
+        response = requests.get(
+            url,
+            params={
+                "geometries": "geojson",
+                "overview": "full",
+                "access_token": token,
+            },
+            timeout=15,
         )
 
-        response = requests.get(url, timeout=10)
         data = response.json()
 
-        if "trips" not in data:
-            return Response(data, status=status.HTTP_400_BAD_REQUEST)
+        routes = data.get("routes") if isinstance(data, dict) else None
 
-        trip = data["trips"][0]
+        if response.status_code != 200 or not routes:
+            return Response(
+                data if isinstance(data, dict) else {"error": "No route"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-        ordered_waypoints = sorted(data["waypoints"], key=lambda x: x["waypoint_index"])
+        route = routes[0]
+        geom = route.get("geometry")
+        if not geom:
+            return Response(
+                {"error": "No geometry in Mapbox route"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-        original_points = list(parcours_points)
+        distance_km = round(route.get("distance", 0) / 1000, 2)
+        duration_min = int(round(route.get("duration", 0) / 60))
 
         optimized_points = []
+        for idx, pp in enumerate(parcours_points):
+            optimized_points.append(
+                {
+                    "point_id": str(pp.point.id),
+                    "name": pp.point.name,
+                    "latitude": pp.point.latitude,
+                    "longitude": pp.point.longitude,
+                    "optimized_order": idx,
+                }
+            )
 
-        for wp in ordered_waypoints:
-            original_idx = wp["waypoint_index"]
-            pp = original_points[original_idx]
-
-            optimized_points.append({
-                "point_id": str(pp.point.id),
-                "name": pp.point.name,
-                "latitude": pp.point.latitude,
-                "longitude": pp.point.longitude,
-                "optimized_order": original_idx
-            })
-
-        distance_km = round(trip["distance"] / 1000, 2)
-        duration_min = round(trip["duration"] / 60)
+        parcours.distance_km = distance_km
+        parcours.duration_min = duration_min
+        parcours.save(update_fields=["distance_km", "duration_min"])
 
         return Response(
             {
                 "distance_km": distance_km,
                 "duration_min": duration_min,
-                "geometry": trip["geometry"],
+                "geometry": geom,
                 "optimized_points": optimized_points,
             }
         )
