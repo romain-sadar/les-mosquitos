@@ -1,26 +1,17 @@
-from django.test import TestCase
-from rest_framework.test import APIClient
+def test_register(api_client):
+    response = api_client.post(
+        "/api/register/", {"username": "newuser", "password": "password123"}
+    )
+
+    assert response.status_code == 201
 
 
-class AuthTest(TestCase):
-    def setUp(self):
-        self.client = APIClient()
+def test_login(api_client):
+    api_client.post("/api/register/", {"username": "user1", "password": "password123"})
 
-    def test_register(self):
-        response = self.client.post(
-            "/api/register/", {"username": "newuser", "password": "password123"}
-        )
+    response = api_client.post(
+        "/api/login/", {"username": "user1", "password": "password123"}
+    )
 
-        self.assertEqual(response.status_code, 201)
-
-    def test_login(self):
-        self.client.post(
-            "/api/register/", {"username": "user1", "password": "password123"}
-        )
-
-        response = self.client.post(
-            "/api/login/", {"username": "user1", "password": "password123"}
-        )
-
-        self.assertEqual(response.status_code, 200)
-        self.assertIn("token", response.data)
+    assert response.status_code == 200
+    assert "token" in response.data
