@@ -46,7 +46,8 @@ class Point(models.Model):
                 self.save()
 
     def save(self, *args, **kwargs):
-        if self.label and self.label.is_treatable:
+        # Non-treatable labels cannot be "traité"; treatable labels keep API/user `is_treated`.
+        if self.label and not self.label.is_treatable:
             self.is_treated = False
         super().save(*args, **kwargs)
 
