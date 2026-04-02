@@ -240,10 +240,14 @@ class ParcoursViewSet(ModelViewSet):
 
     @action(detail=True, methods=["get"])
     def optimize(self, request, pk=None):
+        start_lat = request.query_params.get("start_lat")
+        start_lng = request.query_params.get("start_lng")
         parcours = self.get_object()
 
-        parcours_points = parcours.parcours_points.select_related("point").order_by(
-            "visit_order"
+        parcours_points = (
+            parcours.parcours_points.select_related("point")
+            .filter(point__is_treated=False)
+            .order_by("visit_order")
         )
 
         if parcours_points.count() < 2:
@@ -252,9 +256,17 @@ class ParcoursViewSet(ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        coordinates = ";".join(
-            [f"{pp.point.longitude},{pp.point.latitude}" for pp in parcours_points]
-        )
+        coordinates_list = []
+
+        if start_lat and start_lng:
+            coordinates_list.append(f"{start_lng},{start_lat}")
+
+        coordinates_list.extend([
+            f"{pp.point.longitude},{pp.point.latitude}"
+            for pp in parcours_points
+        ])
+
+        coordinates = ";".join(coordinates_list)
 
         token = os.getenv("MAPBOX_TOKEN")
 
@@ -262,7 +274,7 @@ class ParcoursViewSet(ModelViewSet):
             f"https://api.mapbox.com/optimized-trips/v1/mapbox/walking/{coordinates}"
             f"?geometries=geojson"
             f"&source=first"
-            f"&destination=last"
+            f"&destination=any"
             f"&roundtrip=false"
             f"&access_token={token}"
         )
@@ -277,20 +289,21 @@ class ParcoursViewSet(ModelViewSet):
 
         ordered_waypoints = sorted(data["waypoints"], key=lambda x: x["waypoint_index"])
 
+        original_points = list(parcours_points)
+
         optimized_points = []
 
-        for idx, wp in enumerate(ordered_waypoints):
-            pp = list(parcours_points)[idx]
+        for wp in ordered_waypoints:
+            original_idx = wp["waypoint_index"]
+            pp = original_points[original_idx]
 
-            optimized_points.append(
-                {
-                    "point_id": str(pp.point.id),
-                    "name": pp.point.name,
-                    "latitude": pp.point.latitude,
-                    "longitude": pp.point.longitude,
-                    "optimized_order": wp["waypoint_index"],
-                }
-            )
+            optimized_points.append({
+                "point_id": str(pp.point.id),
+                "name": pp.point.name,
+                "latitude": pp.point.latitude,
+                "longitude": pp.point.longitude,
+                "optimized_order": original_idx
+            })
 
         distance_km = round(trip["distance"] / 1000, 2)
         duration_min = round(trip["duration"] / 60)
