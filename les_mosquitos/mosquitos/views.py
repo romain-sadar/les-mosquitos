@@ -31,6 +31,7 @@ from .serializers import (
     ParcoursPointSerializer,
     MissionTrackSerializer,
     PointPhotoSerializer,
+    MultiPointPhotoUploadSerializer,
 )
 
 
@@ -134,16 +135,40 @@ class PointViewSet(ModelViewSet):
         point.save()
 
         return Response({"status": "treated"})
-    
-class PointPhotoViewSet(viewsets.ModelViewSet):
+
+
+
+class PointPhotoViewSet(ModelViewSet):
     serializer_class = PointPhotoSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         return PointPhoto.objects.filter(point_id=self.kwargs["point_pk"])
 
-    def perform_create(self, serializer):
-        serializer.save(point_id=self.kwargs["point_pk"])
+    def create(self, request, *args, **kwargs):
+        point_id = self.kwargs["point_pk"]
+
+        # validate point ownership (recommended)
+        point = Point.objects.get(id=point_id)
+        if point.created_by != request.user:
+            return Response({"error": "Forbidden"}, status=403)
+
+        serializer = MultiPointPhotoUploadSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        images = serializer.validated_data["images"]
+
+        photos = [
+            PointPhoto(point_id=point_id, image=image)
+            for image in images
+        ]
+
+        created_photos = PointPhoto.objects.bulk_create(photos)
+
+        return Response(
+            PointPhotoSerializer(created_photos, many=True).data,
+            status=status.HTTP_201_CREATED
+        )
 
 
 class ParcoursViewSet(ModelViewSet):
